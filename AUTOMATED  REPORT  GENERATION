@@ -1,0 +1,60 @@
+import pandas as pd
+from fpdf import FPDF
+import matplotlib.pyplot as plt
+import os
+
+file_path = r'C:\Users\Admin\Downloads\Book1.xlsx' # Use raw string or double backslashes
+df = pd.read_excel(file_path)
+
+summary = df.describe()  # Summary statistics of the dataset
+
+department_avg_salary = df.groupby('Department')['Salary'].mean()
+
+pdf = FPDF()
+pdf.set_auto_page_break(auto=True, margin=15)
+pdf.add_page()
+
+pdf.set_font('Arial', 'B', 16)
+pdf.cell(200, 10, txt="Employee Data Report", ln=True, align='C')
+
+pdf.ln(10)
+
+pdf.set_font('Arial', 'B', 12)
+pdf.cell(40, 10, 'Summary Statistics', ln=True)
+pdf.ln(5)
+
+pdf.set_font('Arial', '', 12)
+for col in summary.columns:
+    pdf.cell(40, 10, f'{col}: {summary[col].to_string(index=False)}', ln=True)
+
+pdf.ln(10)
+
+# Step 6: Add Department-wise Salary Analysis
+pdf.set_font('Arial', 'B', 12)
+pdf.cell(40, 10, 'Average Salary by Department', ln=True)
+pdf.ln(5)
+
+pdf.set_font('Arial', '', 12)
+for department, salary in department_avg_salary.items():
+    pdf.cell(40, 10, f'{department}: {salary}', ln=True)
+
+pdf.ln(10)
+
+plt.figure(figsize=(6, 4))
+department_avg_salary.plot(kind='bar', color='skyblue')
+plt.title('Average Salary by Department')
+plt.xlabel('Department')
+plt.ylabel('Average Salary')
+
+chart_filename = 'salary_distribution.png'
+plt.savefig(chart_filename)
+plt.close()
+
+pdf.image(chart_filename, x=10, y=pdf.get_y(), w=180)
+
+pdf_output_path = 'employee_report.pdf'  # Specify output path for the PDF
+pdf.output(pdf_output_path)
+
+os.remove(chart_filename)
+
+print("PDF Report generated successfully!")
